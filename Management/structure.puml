@@ -1,0 +1,188 @@
+@startuml
+
+left to right direction
+skinparam classAttributeIconSize 0
+
+package Management {
+
+    namespace CMS {
+
+        namespace Contract {
+            interface CMSInterface {
+                + constructor(Request request)
+                + getDataProvider() : CMSDataProvider
+                + getListEntitiesBuilder() : ListEntitiesBuilder
+                + getEditorEntitiesBuilder() : EditorEntitiesBuilder
+                + getLeftMenuBuilder() : LeftMenuBuilder
+                + handleRequest(): ?array
+            }
+        }
+
+        class CMS implements CMS.Contract.CMSInterface {
+            ---
+            Класс через который строится вся CMS
+        }
+    }
+
+    namespace Builder {
+    
+        namespace DTO {
+            class FieldsListEntityForEdit {
+                + constructor(array<EditorFieldBuilder> $list)
+                + getList() array<EditorFieldBuilder>
+            }
+
+            class FieldsListEntityForShow {
+                + constructor(array<FieldInListBuilder> $list)
+                + getList() array<FieldInListBuilder>
+            }
+        }
+
+        class LeftMenuBuilder {
+            + addLink(string $name, $link)
+            + addLinkListOfEntity(string $name, string $entityClass)
+            ---
+            Конструктор левого меню
+        }
+
+        class EditorEntitiesBuilder {
+            + addEntity(string $entityClass): self
+            + setPermissionOnlyGroups(...$groupsIds): self
+            + getFieldsForEntity(string $entityClass): FieldsListEntityForEdit
+            + addField(string $field, TypeInterface $type): EditorFieldBuilder
+            ---
+            Конструктор страниц редактирования сущностей
+        }
+
+        class ListEntitiesBuilder {
+            + addEntity(string $entityClass): self
+            + setPermissionOnlyGroups(...$groupsIds): self
+            + getFieldsForEntity(string $entityClass): FieldsListEntityForShow
+            + addField(string $field, TypeInterface $type): FieldInListBuilder
+            ---
+            Конструктор отображения списка сущностей
+        }
+
+        class FieldInListBuilder {
+            + required(bool $value = true): self
+            + label($label)
+            + name($name)
+            + description($description)
+            + default($defaultValue = null): self
+            + width(string $value)
+            + height(string $value)
+            ---
+            Класс через который строятся правила обработки полей при просмотре
+        }
+
+        class EditorFieldBuilder {
+            + required(bool $value = true): self
+            + label($label)
+            + name($name)
+            + description($description)
+            + default($defaultValue = null): self
+            + width(string $value)
+            + height(string $value)
+            ---
+            Класс через который строятся правила обработки полей при редактировании
+        }
+
+    }
+
+    namespace Exception {
+
+        class BaseCmsException {
+
+        }
+
+    }
+
+    namespace Type {
+        interface TypeInterface {
+            + constructor($object, $fieldCode)
+            + setNewValue($newValue): string
+            + getValue(): string
+            + getNewValueFromRequest(Request $request)
+            + generateHtmlField(): string
+        }
+
+        class TextType implements TypeInterface {
+
+        }
+
+        class ImageType implements TypeInterface {
+
+        }
+
+        class ImagesType implements TypeInterface {
+
+        }
+
+        class CheckboxType implements TypeInterface {
+
+        }
+
+        class NumberType implements TypeInterface {
+
+        }
+
+    }
+
+    namespace Handler {
+
+        class CMSHandler {
+            + handle(CMSInterface $cms, CMSDataProvider $cmsDataProvider)
+        }
+
+    }
+
+    namespace DataProvider {
+        class CMSDataProvider {
+            + constructor (Request $request)
+            + getData(): array
+            + getTypePage(): enum['MAIN', 'LIST_ENTITIES', 'EDIT_ENTITY']
+        }
+    }
+
+    namespace View {
+
+        class CMSView {
+            + constructor(CMSInterface $cms, CMSDataProvider $cmsDataProvider)
+            + generateHTML(): string
+            - generateLeftSection(): string
+            - generateRightSection(): string
+            ---
+            Генерирует текстовое представление из строителя CMS и данных
+        }
+
+        class ListEntitiesView {
+            + constructor(CMS $cms)
+            + generateHTML(): string
+            ---
+            Генерирует текстовое представление списка элементов
+        }
+
+        class FormEditView {
+            + constructor(FieldsListEntityForEdit $fieldsListEntityForEdit)
+            + generateHTML(): string
+            ---
+            Генерирует текстовое представление редактирования формы
+        }
+
+        class FieldShowView {
+            + constructor(FieldsListEntityForShow $fieldsListEntityForShow)
+            + generateHTML(): string
+            ---
+            Генерирует текстовое представление поля списка элементов
+        }
+
+    }
+
+    /'
+    Builder.MyClass1 ..>  Builder.MyClass2
+    Builder.MyClass1 ..|>  Builder.MyClass2
+    Builder.MyClass1 --o Builder.MyClass2
+    '/
+}
+
+@enduml
